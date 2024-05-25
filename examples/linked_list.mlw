@@ -1,0 +1,53 @@
+module SearchingALinkedList
+
+  use int.Int
+  use option.Option
+  use export list.List
+  use export list.Length
+  use export list.Nth
+
+  (* Zero found at index i
+     All elements with indexes less than i are not equal to 0 *)
+  predicate zero_at (l: list int) (i: int) =
+    nth i l = Some 0 /\ forall j. 0 <= j < i -> nth j l <> Some 0
+
+  (* Zero not found
+     No value at index j is zero *)
+  predicate no_zero (l: list int) =
+    forall j. 0 <= j < length l -> nth j l <> Some 0
+
+  (* Helper function
+     Variant is linked list *)
+  let rec search (i: int) (l: list int) : int variant { l }
+
+    (* Postcondition
+       Result is within limits with respect to initial value of i *)
+    ensures { (i <= result < i + length l /\ zero_at l (result - i))
+           \/ (result = i + length l /\ no_zero l) }
+
+  (* Search *)
+  = match l with
+    | Nil -> i
+    | Cons x r -> if x = 0 then i else search (i + 1) r
+    end
+
+  (* Main function
+     Prove: 'why3 prove -P z3 linked_list.mlw' *)
+  let search_list (l: list int) : int
+
+    (* Postcondition of final result *)
+    ensures { (0 <= result < length l /\ zero_at l result)
+           \/ (result = length l /\ no_zero l) }
+
+  (* Call helper function *)
+  = search 0 l
+
+  (* Test function
+     Run: 'why3 execute linked_list.mlw --use=SearchingALinkedList 'test ()'' *)
+  let test () =
+    search 0 (Cons 1 (Cons 2 (Cons 3 Nil))),
+    search 2 (Cons 4 (Cons 5 (Cons 6 Nil))),
+    search 0 (Cons 7 (Cons 8 (Cons 0 Nil))),
+    search 9 (Cons 10 (Cons 0 (Cons 12 Nil)))
+
+end

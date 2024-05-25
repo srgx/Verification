@@ -1,0 +1,53 @@
+module MaxAndSum
+
+  use int.Int
+  use ref.Ref
+  use array.Array
+
+  (* Sum and maximum in array, a - array, n - size
+     Prove: 'why3 prove -P z3 max_sum.mlw' *)
+  let max_sum (a: array int) (n: int) : (int, int)
+
+    (* Preconditions
+       Value n is equal to size of array
+       All array elements are non-negative *)
+    requires { n = length a }
+    requires { forall i. 0 <= i < n -> a[i] >= 0 }
+
+    (* Postcondition
+       Sum is less than or equal to size of array times maximum value *)
+    returns  { sum, max -> sum <= n * max }
+
+    (* Program expression *)
+  = let sum = ref 0 in
+    let max = ref 0 in
+
+    (* Loop *)
+    for i = 0 to n - 1 do
+
+      (* Current sum is never greater than i times current maximum value *)
+      invariant { !sum <= i * !max }
+
+      (* New max *)
+      if !max < a[i] then max := a[i];
+
+      (* Add to sum *)
+      sum := !sum + a[i]
+
+    done;
+
+    (* Return result *)
+    !sum, !max
+
+  (* Create test array
+     Run: 'why3 execute max_sum.mlw --use=MaxAndSum 'test ()'' *)
+  let test () =
+    let n = 10 in
+    let a = make n 0 in
+    a[0] <- 9; a[1] <- 5; a[2] <- 0; a[3] <- 2;  a[4] <- 7;
+    a[5] <- 3; a[6] <- 2; a[7] <- 1; a[8] <- 10; a[9] <- 6;
+
+    (* Returns (45, 10) *)
+    max_sum a n
+
+end
